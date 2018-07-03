@@ -135,4 +135,4 @@ for i in range (5):
     V[i,:] = u(C) - delta + beta * interpolated(agrid, V[T - 2, :], R * (M[i] - C) + y)
     plt.plot(C, V[i,:])
    
-plt.show()       
+plt.show()
