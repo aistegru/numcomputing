@@ -17,10 +17,10 @@ n = 1000                # number of grid points for asset and (endogenous M grid
 amax = 50               # maximum value on asset grid
 amin = 0.1              # minimum value on asset grid
 
-# asset grid
-agrid = np.linspace(amin, amax, n)
+agrid = np.linspace(amin, amax, n)      # asset grid
 
 # defining function depending on sigma
+
 def u(c):
     if sigma == 1:
         return np.log(c)
@@ -29,13 +29,13 @@ def u(c):
     
 def u_prime(c):
     if sigma == 1:
-        return np.divide(1., c)
+        return 1 / c
     else:
         return np.power(c, -sigma)
     
 def u_prime1(c):
     if sigma == 1:
-        return np.divide(1., c)
+        return 1 / c
     else:
         return np.power(c, -1 / sigma)
     
@@ -60,6 +60,7 @@ C = np.zeros((T, n))         # consumption policy function
 '''
 SOLVING FOR t = T
 '''
+
 Cw[T - 1,:] = agrid
 Cr[T - 1,:] = agrid
 
@@ -83,7 +84,8 @@ m = c + agrid
 
 Cr[T - 2,:] = c
 Mr[T - 2,:] = m
-Vr[T - 2,:] = u(Cr[T - 2,:]) + beta * interpolated(Mr[T - 1,:], Vr[T - 1,:], R * (Mr[T - 2,:] - Cr[T - 2,:]))
+Vr[T - 2,:] = u(Cr[T - 2,:]) + beta * interpolated(Mr[T - 1,:], 
+  Vr[T - 1,:], R * (Mr[T - 2,:] - Cr[T - 2,:]))
 
 # for worker
 rhs = (beta * R) * u_prime(R * agrid + y)
@@ -92,14 +94,15 @@ m = c + agrid
 
 Cw[T - 2,:] = c
 Mw[T - 2,:] = m
-Vw[T - 2,:] = u(Cw[T - 2,:]) - delta + beta * interpolated(Mw[T - 1,:], Vw[T - 1,:], R * (Mw[T - 2,:] - Cw[T - 2,:]) + y)
+Vw[T - 2,:] = u(Cw[T - 2,:]) - delta + beta * interpolated(Mw[T - 1,:], 
+  Vw[T - 1,:], R * (Mw[T - 2,:] - Cw[T - 2,:]) + y)
 
+# interpolating value functions
 Vw[T - 2,:] = interpolated(Mw[T - 2,:], Vw[T - 2,:], agrid)
 Vr[T - 2,:] = interpolated(Mr[T - 2,:], Vr[T - 2,:], agrid)
 
-# where functions cut
-index = np.where(Vw[T-2,:] - Vr[T-2,:] < 0)
-test = Vw[T-2] - Vr[T-2]
+# find index where value functions cross
+index = np.asarray((np.where(Vw[T-2,:] - Vr[T-2,:] < 0)))[0][0]
 
 # value function
 V[T - 2,:] = np.maximum(Vr[T - 2,:], Vw[T - 2,:])
@@ -108,8 +111,9 @@ V[T - 2,:] = np.maximum(Vr[T - 2,:], Vw[T - 2,:])
 Cw[T - 2,:] = interpolated(Mw[T - 2,:], Cw[T - 2,:], agrid)
 Cr[T - 2,:] = interpolated(Mr[T - 2,:], Cr[T - 2,:], agrid)
 
-C[T - 2, :] = Cr[T - 2, :]
-C[T - 2, index] = Cw[T - 2, index]
+# finding consumption based on index
+C[T - 2, :index] = Cw[T - 2, :index]
+C[T - 2, index:] = Cr[T - 2, index:]
 
 '''
 SOLVING FOR t = T - 2
@@ -124,12 +128,11 @@ Cr[T - 3, :] = c
 Mr[T - 3, :] = m
 Vr[T - 3, :] = u(Cr[T - 3, :]) + beta * interpolated(Mr[T - 2, :], Vr[T - 2, :], R * (Mr[T - 3, :] - Cr[T - 3, :]))
 
-# plotting the graphs for figure(a)
-M = [28, 29, 30.5826, 31, 32]
+# plotting the graphs for figure(a) for worker
+M = [28, 29, 30.5626, 31, 32]
 C = np.linspace(10, 30, 1000)
 for i in range (5):
-    V[i,:] = u(C) + beta * interpolated(agrid, V[T - 2, :], R * (M[i] - C) + y)
+    V[i,:] = u(C) - delta + beta * interpolated(agrid, V[T - 2, :], R * (M[i] - C) + y)
     plt.plot(C, V[i,:])
-    
-plt.plot(C, 30.4382)
+   
 plt.show()       
